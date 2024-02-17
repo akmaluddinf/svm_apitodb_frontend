@@ -25,7 +25,7 @@ const Login = ({ onLogin }) => {
           text: 'Login Successful!',
           confirmButtonColor: '#00a65a',
         });
-        onLogin();
+        onLogin(response.data.token);
       } else {
         Swal.fire({
           icon: 'error',
@@ -44,6 +44,12 @@ const Login = ({ onLogin }) => {
     }
   };
 
+  const handleEnterKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
   return (
     <div className="container d-flex align-items-center justify-content-center vh-100">
       <div className="card p-4" style={{ width: '400px', height: '400px', border: "0px" }}>
@@ -56,6 +62,7 @@ const Login = ({ onLogin }) => {
             className="form-control"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={handleEnterKeyPress}
           />
         </div>
         <div className="mb-3">
@@ -66,6 +73,7 @@ const Login = ({ onLogin }) => {
             className="form-control"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleEnterKeyPress}
           />
         </div>
         <div style={{ marginTop: "20px" }}>

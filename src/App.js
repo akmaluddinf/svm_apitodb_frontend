@@ -7,21 +7,43 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedLoginStatus = localStorage.getItem('isLoggedIn');
-    if (storedLoginStatus) {
-      setIsLoggedIn(true);
+    const storedToken = sessionStorage.getItem('token');
+
+    if (storedToken) {
+      const tokenExpiration = new Date(JSON.parse(atob(storedToken.split('.')[1])).exp * 1000);
+      const currentTime = new Date();
+
+      if (currentTime < tokenExpiration) {
+        setIsLoggedIn(true);
+
+        const timeout = setTimeout(() => {
+          handleLogout();
+        }, tokenExpiration - currentTime);
+
+        return () => clearTimeout(timeout);
+      } else {
+        handleLogout();
+      }
     }
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = (token) => {
+    sessionStorage.setItem('token', token);
     setIsLoggedIn(true);
-    localStorage.setItem('isLoggedIn', 'true');
+
+    const tokenExpiration = new Date(JSON.parse(atob(token.split('.')[1])).exp * 1000);
+    const currentTime = new Date();
+
+    const timeout = setTimeout(() => {
+      handleLogout();
+    }, tokenExpiration - currentTime);
+
+    return () => clearTimeout(timeout);
   };
 
   const handleLogout = () => {
+    sessionStorage.removeItem('token');
     setIsLoggedIn(false);
-    localStorage.removeItem('isLoggedIn');
   };
 
   return (

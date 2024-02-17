@@ -1,30 +1,38 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faGear, faHippo, faCat } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faGear, faHippo, faCat, faDove, faShieldCat } from '@fortawesome/free-solid-svg-icons';
 import Swal from 'sweetalert2';
 import ReactPaginate from 'react-paginate';
 import './App.css';
+import Select from 'react-select';
 
 const Home = ({ onLogout }) => {
   const [endpoints, setEndpoints] = useState([]);
   const [dataPeriode, setDataPeriode] = useState([]);
+  const [kodePeriodeSelected, setKodePeriodeSelected] = useState("Select");
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTermDataPeriode, setSearchTermDataperiode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [loadingDataperiode, setLoadingDataPeriode] = useState(false);
   const [errorDataPeriode, setErrorDataPeriode] = useState('');
+  const [totalDataApi, setTotalDataApi] = useState('');
+  const [totalDataDatabase, setTotalDataDatabase] = useState('');
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modulDescription, setModulDescription] = useState('');
+  const [tableName, setTablename] = useState('');
+  const [parameterPeriode, setParameterPeriode] = useState('');
 
   const [currentPageEndpoint, setCurrentPageEndpoint] = useState(0);
   const [itemPerPageEndpoint, setItemPerPageEndpoint] = useState(10);
   const [currentPageDataPeriode, setCurrentPageDataPeriode] = useState(0);
   const [itemPerPageDataPeriode, setItemPerPageDataPeriode] = useState(10);
 
-  // Menghitung jumlah halaman total
   const totalPagesEndpoint = Math.ceil(endpoints.length / itemPerPageEndpoint);
   const totalPagesDataPeriode = Math.ceil(dataPeriode.length / itemPerPageDataPeriode);
 
+  //fetch data endpoint
   const fetchData = useCallback(() => {
     setLoading(true);
     setError('');
@@ -54,7 +62,7 @@ const Home = ({ onLogout }) => {
       });
   }, [searchTerm]);
 
-  //data periode
+  //fetch data periode
   const fetchDataPeriode = useCallback(() => {
     setLoadingDataPeriode(true);
     setErrorDataPeriode('');
@@ -90,13 +98,14 @@ const Home = ({ onLogout }) => {
     fetchDataPeriode();
   }, [fetchData, fetchDataPeriode])
 
+  //flag read data endpoint
   const getFlagStatus = (flag) => {
     return flag === 1 ? 'Active' : 'Not Active';
   };
 
   const handleFlagChange = (id, currentFlag) => {
     Swal.fire({
-      text: 'Are you sure want to change the read status?',
+      text: 'Change the read status?',
       icon: 'info',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -106,15 +115,13 @@ const Home = ({ onLogout }) => {
     }).then((result) => {
       if (result.isConfirmed) {
         const newFlag = currentFlag === 1 ? 0 : 1;
-        console.log("new flag", newFlag);
 
         axios.patch(`http://localhost:3002/api/endpoints/${id}`, { __read: newFlag })
           .then(response => {
-            console.log(response.data.message);
             fetchData();
 
             Swal.fire({
-              text: 'Read status successfully changed.',
+              text: response.data.message,
               icon: 'success',
               confirmButtonColor: '#00a65a',
             });
@@ -137,12 +144,11 @@ const Home = ({ onLogout }) => {
 
   const clearSearch = () => {
     setSearchTerm('');
-    // fetchData();
   };
 
   const handleUpdateAllFlags = (newFlag) => {
     Swal.fire({
-      text: `Are you sure want to change all read status to ${newFlag === 1 ? 'Active' : 'Not Active'}?`,
+      text: `Change all read status to ${newFlag === 1 ? 'Active' : 'Not Active'}?`,
       icon: 'info',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -153,11 +159,10 @@ const Home = ({ onLogout }) => {
       if (result.isConfirmed) {
         axios.patch('http://localhost:3002/api/endpoints/updateAllFlag', { __read: newFlag })
           .then(response => {
-            console.log(response.data.message);
             fetchData();
 
             Swal.fire({
-              text: `Read status successfully changed.`,
+              text: response.data.message,
               icon: 'success',
               confirmButtonColor: '#00a65a',
             });
@@ -174,14 +179,14 @@ const Home = ({ onLogout }) => {
     });
   };
 
-  //data periode =========================================
+  //flag read data periode
   const getFlagStatusDataPeriode = (flag) => {
     return flag === 1 ? 'Active' : 'Not Active';
   };
 
   const handleFlagChangeDataPeriode = (id, currentFlag) => {
     Swal.fire({
-      text: 'Are you sure want to change the read status?',
+      text: 'Change the read status?',
       icon: 'info',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -191,15 +196,13 @@ const Home = ({ onLogout }) => {
     }).then((result) => {
       if (result.isConfirmed) {
         const newFlag = currentFlag === 1 ? 0 : 1;
-        console.log("new flag", newFlag);
 
         axios.patch(`http://localhost:3002/api/dataPeriode/${id}`, { __read: newFlag })
           .then(response => {
-            console.log(response.data.message);
             fetchDataPeriode();
 
             Swal.fire({
-              text: 'Read status successfully changed.',
+              text: response.data.message,
               icon: 'success',
               confirmButtonColor: '#00a65a',
             });
@@ -222,12 +225,11 @@ const Home = ({ onLogout }) => {
 
   const clearSearchDataPeriode = () => {
     setSearchTermDataperiode('');
-    // fetchData();
   };
 
   const handleUpdateAllFlagsDataPeriode = (newFlag) => {
     Swal.fire({
-      text: `Are you sure want to change all read status to ${newFlag === 1 ? 'Active' : 'Not Active'}?`,
+      text: `Change all read status to ${newFlag === 1 ? 'Active' : 'Not Active'}?`,
       icon: 'info',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -238,11 +240,10 @@ const Home = ({ onLogout }) => {
       if (result.isConfirmed) {
         axios.patch('http://localhost:3002/api/dataPeriode/updateAllFlag', { __read: newFlag })
           .then(response => {
-            console.log(response.data.message);
             fetchDataPeriode();
 
             Swal.fire({
-              text: `Read status successfully changed.`,
+              text: response.data.message,
               icon: 'success',
               confirmButtonColor: '#00a65a',
             });
@@ -289,8 +290,131 @@ const Home = ({ onLogout }) => {
   };
 
   const handleLogout = () => {
-    onLogout(); // Panggil fungsi onLogout untuk mengubah status login di komponen induk
+    onLogout();
   };
+
+  const handleCheckData = async (endpointUrl) => {
+    let moduleName = endpointUrl.split('/').pop();
+
+    if (moduleName === 'biodatamhs') {
+      moduleName = 'mahasiswa';
+    } else if (moduleName === 'swithingbank') {
+      moduleName = 'masterbank';
+    }
+    setModulDescription(moduleName);
+
+    try {
+      setModalLoading(true);
+
+      const response = await axios.post(`http://localhost:3002/api/cekTotalData/${moduleName}`);
+      setTotalDataApi(response.data.totalDataApi)
+      setTotalDataDatabase(response.data.totalDataDatabase);
+
+      setModalLoading(false);
+
+    } catch (error) {
+      setModalLoading(false);
+      const infoError = `Error when processing total data ${moduleName}: ${error.message}`
+      console.error(infoError);
+    }
+  };
+
+
+  //handle show modal delete data
+  const handleShowModalDeleteData = (endpointUrl, endpointTable, paramPeriode) => {
+    setKodePeriodeSelected("");
+    let moduleName = endpointUrl.split('/').pop();
+
+    if (moduleName === 'biodatamhs') {
+      moduleName = 'mahasiswa';
+    } else if (moduleName === 'swithingbank') {
+      moduleName = 'masterbank';
+    }
+
+    setModulDescription(moduleName);
+    setTablename(endpointTable);
+    setParameterPeriode(paramPeriode);
+
+  }
+
+  const handleConfirmationDeleteData = () => {
+    if (!kodePeriodeSelected) {
+      Swal.fire({
+        text: 'Periode is required.',
+        icon: 'warning',
+        confirmButtonColor: '#00a65a',
+      });
+    } else {
+      Swal.fire({
+        title: 'Delete this record?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          handleDeleteData();
+        }
+      });
+    }
+  };
+
+  //handle delete data
+  const handleDeleteData = async () => {
+    try {
+      const response = await axios.post('http://localhost:3002/api/deleteData', {
+        tableName: tableName,
+        periode: kodePeriodeSelected
+      });
+
+      if (response.data.success) {
+        Swal.fire({
+          text: response.data.message,
+          icon: 'success',
+          confirmButtonColor: '#00a65a',
+        });
+      } else {
+        Swal.fire({
+          text: response.data.message,
+          icon: 'warning',
+          confirmButtonColor: '#00a65a',
+        });
+      }
+
+    } catch (error) {
+      const infoError = `Error during delete data ${modulDescription}: ${error.message}`;
+      console.error(infoError);
+      Swal.fire({
+        text: infoError,
+        icon: 'error',
+        confirmButtonColor: '#00a65a',
+      });
+    }
+  };
+
+  // function execute migration
+  const executeMigration = async () => {
+    try {
+      const response = await axios.post('http://localhost:3002/api/runMigration');
+      console.log(response.data);
+
+      if (response.data.success) {
+        console.log('Migration executed successfully');
+      } else {
+        console.error('Error during migration:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error during migration:', error.message);
+    }
+  };
+
+  const handleChangeKodePeriode = (selectedOption) => {
+    const selectedValue = selectedOption.value;
+    setKodePeriodeSelected(selectedValue);
+    console.log(selectedValue);
+  };
+
 
   return (
     <div className='container mt-5'>
@@ -312,7 +436,7 @@ const Home = ({ onLogout }) => {
           <div className="tab-content">
             <div className="tab-pane fade show active" id="tab1" role="tabpanel">
               <div className='row' style={{ marginTop: "20px" }}>
-                <div className='col-md-4' style={{marginBottom: "20px"}}>
+                <div className='col-md-4' style={{ marginBottom: "20px" }}>
                   <div className="input-group">
                     <input
                       type="text"
@@ -341,10 +465,11 @@ const Home = ({ onLogout }) => {
                     <ul className="dropdown-menu dropdown-hover">
                       <li className="dropdown-item" style={{ cursor: "pointer" }} onClick={() => handleUpdateAllFlagsDataPeriode(1)}>Set status read active</li>
                       <li className="dropdown-item" style={{ cursor: "pointer" }} onClick={() => handleUpdateAllFlagsDataPeriode(0)}>Set status read not active</li>
+                      <li className="dropdown-item" style={{ cursor: "pointer" }} onClick={() => executeMigration()}>Execute Endpoint</li>
                     </ul>
                   </div>
                   <div>
-                    <button type="button" className="btn btn-danger" onClick={handleLogout} style={{marginLeft: "20px"}}>Logout</button>
+                    <button type="button" className="btn btn-danger" onClick={handleLogout} style={{ marginLeft: "20px" }}>Logout</button>
                   </div>
                 </div>
               </div>
@@ -353,42 +478,44 @@ const Home = ({ onLogout }) => {
                   {loadingDataperiode && <p>Loading...</p>}
                   {errorDataPeriode && <p style={{ color: 'red' }}>{errorDataPeriode}</p>}
                   {!loadingDataperiode && !errorDataPeriode && (
-                    <table className="table table-bordered table-hover text-nowrap table-sm">
-                      <thead style={{ textAlign: "center" }}>
-                        <tr>
-                          <th>No</th>
-                          <th>Kode Periode</th>
-                          <th>Nama Periode</th>
-                          <th>Read</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentItemDataPeriode.map((item, index) => (
-                          <tr
-                            key={item.fid}
-                            style={{
-                              background: item.flag === 1 ? '#26ff000f' : '#f3444414',
-                              color: 'black',
-                            }}
-                          >
-                            <td>{(currentPageDataPeriode) * itemPerPageDataPeriode + index + 1}</td>
-                            <td>{item.kode_periode}</td>
-                            <td>{item.nama_periode}</td>
-                            <td>
-                              {getFlagStatusDataPeriode(item.__read)}
-                            </td>
-                            <td style={{ textAlign: "center" }}>
-                              {item.__read === 1 ? (
-                                <FontAwesomeIcon icon={faHippo} onClick={() => handleFlagChangeDataPeriode(item.fid, item.__read)} style={{ cursor: "pointer", color: "red", height: "26px" }} data-toggle="tooltip" title="Set Status Read Non Aktif" data-placement="top" />
-                              ) : (
-                                <FontAwesomeIcon icon={faCat} onClick={() => handleFlagChangeDataPeriode(item.fid, item.__read)} style={{ cursor: "pointer", color: "00a65a", height: "26px" }} data-toggle="tooltip" title="Set Status Read Aktif" data-placement="top" />
-                              )}
-                            </td>
+                    <div className="table-responsive">
+                      <table className="table table-bordered table-hover text-nowrap table-sm">
+                        <thead style={{ textAlign: "center" }}>
+                          <tr>
+                            <th>No</th>
+                            <th>Kode Periode</th>
+                            <th>Nama Periode</th>
+                            <th>Read</th>
+                            <th>Action</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {currentItemDataPeriode.map((item, index) => (
+                            <tr
+                              key={item.fid}
+                              style={{
+                                background: item.__read === 1 ? '#26ff000f' : '#f3444414',
+                                color: 'black',
+                              }}
+                            >
+                              <td>{(currentPageDataPeriode) * itemPerPageDataPeriode + index + 1}</td>
+                              <td>{item.kode_periode}</td>
+                              <td>{item.nama_periode}</td>
+                              <td>
+                                {getFlagStatusDataPeriode(item.__read)}
+                              </td>
+                              <td style={{ textAlign: "center" }}>
+                                {item.__read === 1 ? (
+                                  <FontAwesomeIcon icon={faHippo} onClick={() => handleFlagChangeDataPeriode(item.fid, item.__read)} style={{ cursor: "pointer", color: "red", height: "26px" }} data-toggle="tooltip" title="Set Status Read Non Aktif" data-placement="top" />
+                                ) : (
+                                  <FontAwesomeIcon icon={faCat} onClick={() => handleFlagChangeDataPeriode(item.fid, item.__read)} style={{ cursor: "pointer", color: "00a65a", height: "26px" }} data-toggle="tooltip" title="Set Status Read Aktif" data-placement="top" />
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </div>
               </div>
@@ -420,20 +547,19 @@ const Home = ({ onLogout }) => {
                     <div className='col-md-7' style={{ display: "flex", justifyContent: "right" }}>
                       <ReactPaginate
                         forcePage={Math.min(currentPageDataPeriode, totalPagesDataPeriode - 1)}
-                        // forcePage={currentPageDataPeriode}
                         pageCount={totalPagesDataPeriode}
                         pageRangeDisplayed={3}
                         marginPagesDisplayed={0}
                         onPageChange={handlePageClickDataPeriode}
-                        containerClassName="pagination" // Bootstrap class
-                        pageClassName="page-item" // Bootstrap class
-                        pageLinkClassName="page-link" // Bootstrap class
-                        previousClassName="page-item" // Bootstrap class
-                        nextClassName="page-item" // Bootstrap class
-                        previousLinkClassName="page-link" // Bootstrap class
-                        nextLinkClassName="page-link" // Bootstrap class
-                        breakClassName="page-item" // Bootstrap class
-                        breakLinkClassName="page-link" // Bootstrap class
+                        containerClassName="pagination"
+                        pageClassName="page-item"
+                        pageLinkClassName="page-link"
+                        previousClassName="page-item"
+                        nextClassName="page-item"
+                        previousLinkClassName="page-link"
+                        nextLinkClassName="page-link"
+                        breakClassName="page-item"
+                        breakLinkClassName="page-link"
                         activeClassName="active"
                         previousLabel="Previous"
                         nextLabel="Next"
@@ -480,10 +606,11 @@ const Home = ({ onLogout }) => {
                     <ul className="dropdown-menu dropdown-hover">
                       <li className="dropdown-item" style={{ cursor: "pointer" }} onClick={() => handleUpdateAllFlags(1)}>Set status read active</li>
                       <li className="dropdown-item" style={{ cursor: "pointer" }} onClick={() => handleUpdateAllFlags(0)}>Set status read not active</li>
+                      <li className="dropdown-item" style={{ cursor: "pointer" }} onClick={() => executeMigration()}>Execute Endpoint</li>
                     </ul>
                   </div>
                   <div>
-                    <button type="button" className="btn btn-danger" onClick={handleLogout} style={{marginLeft: "20px"}}>Logout</button>
+                    <button type="button" className="btn btn-danger" onClick={handleLogout} style={{ marginLeft: "20px" }}>Logout</button>
                   </div>
                 </div>
               </div>
@@ -492,44 +619,64 @@ const Home = ({ onLogout }) => {
                   {loading && <p>Loading...</p>}
                   {error && <p style={{ color: 'red' }}>{error}</p>}
                   {!loading && !error && (
-                    <table className="table table-bordered table-hover text-nowrap table-sm">
-                      <thead style={{ textAlign: "center" }}>
-                        <tr>
-                          <th>No</th>
-                          <th>Endpoint</th>
-                          <th>Parameter</th>
-                          <th>Description</th>
-                          <th>Read</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentItemEndpoint.map((endpoint, index) => (
-                          <tr
-                            key={endpoint.endpoints_fid}
-                            style={{
-                              background: endpoint.__read === 1 ? '#26ff000f' : '#f3444414',
-                              color: 'black',
-                            }}
-                          >
-                            <td>{(currentPageEndpoint) * itemPerPageEndpoint + index + 1}</td>
-                            <td>{endpoint.endpoints_url}</td>
-                            <td>{endpoint.endpoints_param}</td>
-                            <td>{endpoint.endpoints_desc}</td>
-                            <td>
-                              {getFlagStatus(endpoint.__read)}
-                            </td>
-                            <td style={{ textAlign: "center" }}>
-                              {endpoint.__read === 1 ? (
-                                <FontAwesomeIcon icon={faHippo} onClick={() => handleFlagChange(endpoint.endpoints_fid, endpoint.__read)} style={{ cursor: "pointer", color: "red", height: "26px" }} data-toggle="tooltip" title="Set Status Read Non Aktif" data-placement="top" />
-                              ) : (
-                                <FontAwesomeIcon icon={faCat} onClick={() => handleFlagChange(endpoint.endpoints_fid, endpoint.__read)} style={{ cursor: "pointer", color: "00a65a", height: "26px" }} data-toggle="tooltip" title="Set Status Read Aktif" data-placement="top" />
-                              )}
-                            </td>
+                    <div className="table-responsive">
+                      <table className="table table-bordered table-hover text-nowrap table-sm">
+                        <thead style={{ textAlign: "center" }}>
+                          <tr>
+                            <th>No</th>
+                            <th>Endpoint</th>
+                            <th>Parameter</th>
+                            <th>Description</th>
+                            <th>Read</th>
+                            <th>Action</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {currentItemEndpoint.map((endpoint, index) => (
+                            <tr
+                              key={endpoint.endpoints_fid}
+                              style={{
+                                background: endpoint.__read === 1 ? '#26ff000f' : '#f3444414',
+                                color: 'black',
+                              }}
+                            >
+                              <td>{(currentPageEndpoint) * itemPerPageEndpoint + index + 1}</td>
+                              <td>{endpoint.endpoints_url.split('/').pop()}</td>
+                              <td>{endpoint.endpoints_param}</td>
+                              <td>{endpoint.endpoints_desc}</td>
+                              <td>
+                                {getFlagStatus(endpoint.__read)}
+                              </td>
+                              <td style={{ textAlign: "center" }}>
+                                {endpoint.__read === 1 ? (
+                                  <FontAwesomeIcon icon={faHippo} onClick={() => handleFlagChange(endpoint.endpoints_fid, endpoint.__read)} style={{ cursor: "pointer", color: "red", height: "26px" }} data-toggle="tooltip" title="Set Read Statud Not Active" data-placement="top" />
+                                ) : (
+                                  <FontAwesomeIcon icon={faCat} onClick={() => handleFlagChange(endpoint.endpoints_fid, endpoint.__read)} style={{ cursor: "pointer", color: "00a65a", height: "26px" }} data-toggle="tooltip" title="Set Read Status Active" data-placement="top" />
+                                )}
+                                <FontAwesomeIcon
+                                  icon={faDove}
+                                  onClick={() => handleCheckData(endpoint.endpoints_url)}
+                                  style={{ cursor: "pointer", color: "#007bff", height: "26px", marginLeft: "10px" }}
+                                  data-toggle="tooltip"
+                                  title="Check Total Data"
+                                  data-placement="top"
+                                  data-bs-toggle="modal" data-bs-target="#modalCheckData"
+                                />
+                                <FontAwesomeIcon
+                                  icon={faShieldCat}
+                                  onClick={() => handleShowModalDeleteData(endpoint.endpoints_url, endpoint.endpoints_table, endpoint.endpoints_param)}
+                                  style={{ cursor: "pointer", color: "red", height: "26px", marginLeft: "10px" }}
+                                  data-toggle="tooltip"
+                                  title="Delete Data"
+                                  data-placement="top"
+                                  data-bs-toggle="modal" data-bs-target="#modalDelete"
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </div>
               </div>
@@ -561,20 +708,19 @@ const Home = ({ onLogout }) => {
                     <div className='col-md-7' style={{ display: "flex", justifyContent: "right" }}>
                       <ReactPaginate
                         forcePage={Math.min(currentPageEndpoint, totalPagesEndpoint - 1)}
-                        // forcePage={currentPageEndpoint}
                         pageCount={totalPagesEndpoint}
                         pageRangeDisplayed={3}
                         marginPagesDisplayed={0}
                         onPageChange={handlePageClickEndpoint}
-                        containerClassName="pagination" // Bootstrap class
-                        pageClassName="page-item" // Bootstrap class
-                        pageLinkClassName="page-link" // Bootstrap class
-                        previousClassName="page-item" // Bootstrap class
-                        nextClassName="page-item" // Bootstrap class
-                        previousLinkClassName="page-link" // Bootstrap class
-                        nextLinkClassName="page-link" // Bootstrap class
-                        breakClassName="page-item" // Bootstrap class
-                        breakLinkClassName="page-link" // Bootstrap class
+                        containerClassName="pagination"
+                        pageClassName="page-item"
+                        pageLinkClassName="page-link"
+                        previousClassName="page-item"
+                        nextClassName="page-item"
+                        previousLinkClassName="page-link"
+                        nextLinkClassName="page-link"
+                        breakClassName="page-item"
+                        breakLinkClassName="page-link"
                         activeClassName="active"
                         previousLabel="Previous"
                         nextLabel="Next"
@@ -593,6 +739,85 @@ const Home = ({ onLogout }) => {
         </div>
       </div>
 
+      {/* Modal check total data  */}
+      <div className="modal fade" id="modalCheckData" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Information {modulDescription} record</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              {modalLoading ? (
+                <button className="btn btn-primary" type="button" disabled>
+                  <span className="spinner-border spinner-border-sm" aria-hidden="true" style={{ marginRight: "10px" }}></span>
+                  <span role="status">Loading...</span>
+                </button>
+              ) : (
+                <div>
+                  <p>API: {totalDataApi.toLocaleString()}</p>
+                  <p>Database: {totalDataDatabase.toLocaleString()}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal delete data  */}
+      <div className="modal fade" id="modalDelete" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Delete Record</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              <div className='row'>
+                <div className='col-3'>
+                  <p>Table: </p>
+                </div>
+                <div className='col-9'>
+                  <p>{tableName}</p>
+                </div>
+              </div>
+
+              <div className='row'>
+                <div className='col-3'>
+                  <p>Periode: </p>
+                </div>
+                <div className='col-9'>
+                  {
+                    parameterPeriode === "" || parameterPeriode === null ?
+                      <p>No period parameter.</p>
+                      :
+                      <Select
+                        id="kodePeriode"
+                        value={{ value: kodePeriodeSelected, label: kodePeriodeSelected }}
+                        onChange={handleChangeKodePeriode}
+                        options={[
+                          { value: 'All', label: 'All' },
+                          ...dataPeriode.map(item => ({ value: item.kode_periode, label: item.kode_periode })),
+                        ]}
+                        placeholder="Select"
+                      />
+                  }
+
+                </div>
+              </div>
+
+              <div className='row' style={{ padding: "10px" }}>
+                <div className='col-lg-12'></div>
+                {
+                  parameterPeriode === "" || parameterPeriode === null ? ""
+                    :
+                    <button type="button" className="btn btn-danger" onClick={handleConfirmationDeleteData} data-toggle="tooltip" title="Select periode to process delete data" data-placement="top">Process</button>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
   )
