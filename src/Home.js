@@ -331,6 +331,11 @@ const Home = ({ onLogout }) => {
       moduleName = 'masterbank';
     }
 
+    if(paramPeriode === "" || paramPeriode === null){
+      // paramPeriode = 'All';
+      setKodePeriodeSelected("All");
+    }
+
     setModulDescription(moduleName);
     setTablename(endpointTable);
     setParameterPeriode(paramPeriode);
@@ -784,12 +789,17 @@ const Home = ({ onLogout }) => {
 
               <div className='row'>
                 <div className='col-3'>
-                  <p>Periode: </p>
+                  {
+                    parameterPeriode === '' || parameterPeriode === null ?
+                      ""
+                      :
+                      <p>Periode: </p>
+                  }
                 </div>
                 <div className='col-9'>
                   {
-                    parameterPeriode === "" || parameterPeriode === null ?
-                      <p>No period parameter.</p>
+                    parameterPeriode === '' || parameterPeriode === null ?
+                      ""
                       :
                       <Select
                         id="kodePeriode"
@@ -807,12 +817,7 @@ const Home = ({ onLogout }) => {
               </div>
 
               <div className='row' style={{ padding: "10px" }}>
-                <div className='col-lg-12'></div>
-                {
-                  parameterPeriode === "" || parameterPeriode === null ? ""
-                    :
-                    <button type="button" className="btn btn-danger" onClick={handleConfirmationDeleteData} data-toggle="tooltip" title="Select periode to process delete data" data-placement="top">Process</button>
-                }
+                <button type="button" className="btn btn-danger" onClick={handleConfirmationDeleteData} data-toggle="tooltip" title="Select periode to process delete data" data-placement="top">Process</button>
               </div>
             </div>
           </div>

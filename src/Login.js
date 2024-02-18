@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     try {
@@ -50,6 +53,10 @@ const Login = ({ onLogin }) => {
     }
   };
 
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <div className="container d-flex align-items-center justify-content-center vh-100">
       <div className="card p-4" style={{ width: '400px', height: '400px', border: "0px" }}>
@@ -66,15 +73,24 @@ const Login = ({ onLogin }) => {
           />
         </div>
         <div className="mb-3">
-          <label htmlFor="password" className="form-label">Password:</label>
-          <input
-            type="password"
-            id="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={handleEnterKeyPress}
-          />
+        <label htmlFor="password" className="form-label">Password:</label>
+          <div className="input-group">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              id="password"
+              className="form-control"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={handleEnterKeyPress}
+            />
+            <button
+              className="btn btn-outline-secondary"
+              type="button"
+              onClick={handleTogglePasswordVisibility}
+            >
+              <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+            </button>
+          </div>
         </div>
         <div style={{ marginTop: "20px" }}>
           <button onClick={handleLogin} className="btn btn-success" style={{ width: "100%" }}>Login</button>
