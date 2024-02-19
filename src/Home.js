@@ -23,6 +23,9 @@ const Home = ({ onLogout }) => {
   const [modulDescription, setModulDescription] = useState('');
   const [tableName, setTablename] = useState('');
   const [parameterPeriode, setParameterPeriode] = useState('');
+  const [fileOptions, setFileOptions] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [logContent, setLogContent] = useState('');
 
   const [currentPageEndpoint, setCurrentPageEndpoint] = useState(0);
   const [itemPerPageEndpoint, setItemPerPageEndpoint] = useState(10);
@@ -37,7 +40,7 @@ const Home = ({ onLogout }) => {
     setLoading(true);
     setError('');
 
-    axios.get('http://localhost:3002/api/endpoints')
+    axios.get('http://18.141.101.16:20003/api/endpoints')
       .then(response => {
         const allEndpoints = response.data;
         const filteredEndpoints = allEndpoints.filter(endpoint => {
@@ -67,7 +70,7 @@ const Home = ({ onLogout }) => {
     setLoadingDataPeriode(true);
     setErrorDataPeriode('');
 
-    axios.get('http://localhost:3002/api/dataPeriode')
+    axios.get('http://18.141.101.16:20003/api/dataPeriode')
       .then(response => {
         const allEndpoints = response.data;
         const filteredEndpoints = allEndpoints.filter(endpoint => {
@@ -92,10 +95,36 @@ const Home = ({ onLogout }) => {
       });
   }, [searchTermDataPeriode]);
 
+  //fetch log file list
+  const fetchLogFileList = async () => {
+    try {
+      const response = await axios.get('http://18.141.101.16:20003/api/getLogFileList');
+
+      if (response.data.success) {
+        // Ubah format data file menjadi format yang diterima oleh react-select
+        const files = response.data.files.map(file => ({ label: file, value: file }));
+        setFileOptions(files);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          text: 'Failed to fetch log file list',
+          confirmButtonColor: '#00a65a',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching log file list:', error);
+      Swal.fire({
+        icon: 'error',
+        text: 'An error occurred',
+        confirmButtonColor: '#00a65a',
+      });
+    }
+  };
 
   useEffect(() => {
     fetchData();
     fetchDataPeriode();
+    fetchLogFileList();
   }, [fetchData, fetchDataPeriode])
 
   //flag read data endpoint
@@ -116,7 +145,7 @@ const Home = ({ onLogout }) => {
       if (result.isConfirmed) {
         const newFlag = currentFlag === 1 ? 0 : 1;
 
-        axios.patch(`http://localhost:3002/api/endpoints/${id}`, { __read: newFlag })
+        axios.patch(`http://18.141.101.16:20003/api/endpoints/${id}`, { __read: newFlag })
           .then(response => {
             fetchData();
 
@@ -157,7 +186,7 @@ const Home = ({ onLogout }) => {
       cancelButtonText: 'No',
     }).then((result) => {
       if (result.isConfirmed) {
-        axios.patch('http://localhost:3002/api/endpoints/updateAllFlag', { __read: newFlag })
+        axios.patch('http://18.141.101.16:20003/api/endpoints/updateAllFlag', { __read: newFlag })
           .then(response => {
             fetchData();
 
@@ -197,7 +226,7 @@ const Home = ({ onLogout }) => {
       if (result.isConfirmed) {
         const newFlag = currentFlag === 1 ? 0 : 1;
 
-        axios.patch(`http://localhost:3002/api/dataPeriode/${id}`, { __read: newFlag })
+        axios.patch(`http://18.141.101.16:20003/api/dataPeriode/${id}`, { __read: newFlag })
           .then(response => {
             fetchDataPeriode();
 
@@ -238,7 +267,7 @@ const Home = ({ onLogout }) => {
       cancelButtonText: 'No',
     }).then((result) => {
       if (result.isConfirmed) {
-        axios.patch('http://localhost:3002/api/dataPeriode/updateAllFlag', { __read: newFlag })
+        axios.patch('http://18.141.101.16:20003/api/dataPeriode/updateAllFlag', { __read: newFlag })
           .then(response => {
             fetchDataPeriode();
 
@@ -306,7 +335,7 @@ const Home = ({ onLogout }) => {
     try {
       setModalLoading(true);
 
-      const response = await axios.post(`http://localhost:3002/api/cekTotalData/${moduleName}`);
+      const response = await axios.post(`http://18.141.101.16:20003/api/cekTotalData/${moduleName}`);
       setTotalDataApi(response.data.totalDataApi)
       setTotalDataDatabase(response.data.totalDataDatabase);
 
@@ -331,7 +360,7 @@ const Home = ({ onLogout }) => {
       moduleName = 'masterbank';
     }
 
-    if(paramPeriode === "" || paramPeriode === null){
+    if (paramPeriode === "" || paramPeriode === null) {
       // paramPeriode = 'All';
       setKodePeriodeSelected("All");
     }
@@ -368,7 +397,7 @@ const Home = ({ onLogout }) => {
   //handle delete data
   const handleDeleteData = async () => {
     try {
-      const response = await axios.post('http://localhost:3002/api/deleteData', {
+      const response = await axios.post('http://18.141.101.16:20003/api/deleteData', {
         tableName: tableName,
         periode: kodePeriodeSelected
       });
@@ -401,7 +430,7 @@ const Home = ({ onLogout }) => {
   // function execute migration
   const executeMigration = async () => {
     try {
-      const response = await axios.post('http://localhost:3002/api/runMigration');
+      const response = await axios.post('http://18.141.101.16:20003/api/runMigration');
       console.log(response.data);
 
       if (response.data.success) {
@@ -415,11 +444,53 @@ const Home = ({ onLogout }) => {
   };
 
   const handleChangeKodePeriode = (selectedOption) => {
-    const selectedValue = selectedOption.value;
-    setKodePeriodeSelected(selectedValue);
-    console.log(selectedValue);
+    const selectedKodePeriodeValue = selectedOption.value;
+    setKodePeriodeSelected(selectedKodePeriodeValue);
+    console.log(selectedKodePeriodeValue);
   };
 
+  const handleChangeFileLog = (selectedOption) => {
+    const selectedFileLogValue = selectedOption.value;
+    setSelectedFile(selectedFileLogValue);
+    console.log(selectedFileLogValue);
+  };
+
+  const handleOpenLog = async () => {
+    if (!selectedFile) {
+      Swal.fire({
+        icon: 'error',
+        text: 'Please select a log file',
+        confirmButtonColor: '#00a65a',
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.get(`http://18.141.101.16:20003/api/getLogFileContent/${selectedFile}`);
+
+      if (response.data.success) {
+        setLogContent(response.data.content);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          text: 'Failed to fetch log content',
+          confirmButtonColor: '#00a65a',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching log content:', error);
+      Swal.fire({
+        icon: 'error',
+        text: 'An error occurred',
+        confirmButtonColor: '#00a65a',
+      });
+    }
+  };
+
+  const handleClearLog = () => {
+    setSelectedFile(null);
+    setLogContent("");
+  };
 
   return (
     <div className='container mt-5'>
@@ -435,6 +506,11 @@ const Home = ({ onLogout }) => {
             <li className="nav-item">
               <a className="nav-link" id="tab2-tab" data-bs-toggle="pill" href="#tab2" role="tab" style={{ color: "black" }}>
                 Data Endpoint
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" id="tab3-tab" data-bs-toggle="pill" href="#tab3" role="tab" style={{ color: "black" }}>
+                History Log
               </a>
             </li>
           </ul>
@@ -582,7 +658,7 @@ const Home = ({ onLogout }) => {
 
             <div className="tab-pane fade" id="tab2" role="tabpanel">
               <div className='row' style={{ marginTop: "20px" }}>
-                <div className='col-md-4' style={{ display: 'flex', justifyContent: "right" }}>
+                <div className='col-md-4' style={{ marginBottom: "20px" }}>
                   <div className="input-group">
                     <input
                       type="text"
@@ -739,6 +815,38 @@ const Home = ({ onLogout }) => {
 
             </div> {/* end tab pane 2 */}
 
+
+            <div className="tab-pane fade" id="tab3" role="tabpanel">
+              <div className="row" style={{ marginTop: "20px" }}>
+                <div className="col-md-4" style={{ marginBottom: "20px" }}>
+                  <Select
+                    options={fileOptions}
+                    value={selectedFile ? { value: selectedFile, label: selectedFile } : null}
+                    onChange={handleChangeFileLog}
+                    placeholder="Select a log file"
+                    isSearchable
+                  />
+                </div>
+                <div className='col-md-8' style={{ display: 'flex', justifyContent: "right", height: "100%" }}>
+                  <button onClick={handleOpenLog} className="btn btn-primary" style={{ marginRight: "20px" }}>Open</button>
+                  <button onClick={handleClearLog} className="btn btn-secondary" style={{ marginRight: "20px" }}>Close</button>
+                  <button type="button" className="btn btn-danger" onClick={handleLogout}>Logout</button>
+                </div>
+              </div>
+              <div className="row mt-4">
+                <div className="col-md-12">
+                  {logContent &&
+                    <div className='row' style={{backgroundColor: "#80808017"}}>
+                      <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                        <pre>{logContent}</pre>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
+            </div> {/* end tab pane 3*/}
+
           </div> {/* end tab content */}
 
         </div>
@@ -803,13 +911,13 @@ const Home = ({ onLogout }) => {
                       :
                       <Select
                         id="kodePeriode"
-                        value={{ value: kodePeriodeSelected, label: kodePeriodeSelected }}
+                        value={kodePeriodeSelected ? { value: kodePeriodeSelected, label: kodePeriodeSelected } : null}
                         onChange={handleChangeKodePeriode}
                         options={[
                           { value: 'All', label: 'All' },
                           ...dataPeriode.map(item => ({ value: item.kode_periode, label: item.kode_periode })),
                         ]}
-                        placeholder="Select"
+                        placeholder="Select periode"
                       />
                   }
 

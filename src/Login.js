@@ -20,7 +20,7 @@ const Login = ({ onLogin }) => {
         return;
       }
 
-      const response = await axios.post('http://localhost:3002/api/login', { username, password });
+      const response = await axios.post('http://18.141.101.16:20003/api/login', { username, password });
 
       if (response.status === 200 && response.data.success) {
         Swal.fire({
@@ -60,7 +60,7 @@ const Login = ({ onLogin }) => {
   return (
     <div className="container d-flex align-items-center justify-content-center vh-100">
       <div className="card p-4" style={{ width: '400px', height: '400px', border: "0px" }}>
-        <h2 className="text-center mb-4">Login</h2>
+        <img src='logo_unpas.png' alt="logo" style={{width: "100px", height: "100px", margin: "auto"}}/>
         <div className="mb-3">
           <label htmlFor="username" className="form-label">Username:</label>
           <input
