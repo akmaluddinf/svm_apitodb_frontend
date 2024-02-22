@@ -6,6 +6,8 @@ import Swal from 'sweetalert2';
 import ReactPaginate from 'react-paginate';
 import './App.css';
 import Select from 'react-select';
+import moment from 'moment';
+import 'moment/locale/id';
 
 const Home = ({ onLogout }) => {
   const [endpoints, setEndpoints] = useState([]);
@@ -84,7 +86,10 @@ const Home = ({ onLogout }) => {
           });
         });
 
-        setDataPeriode(filteredEndpoints);
+        // Sort data by Kode Periode in ascending order
+        const sortedDataPeriode = [...filteredEndpoints].sort((a, b) => a.kode_periode.localeCompare(b.kode_periode));
+
+        setDataPeriode(sortedDataPeriode);
       })
       .catch(error => {
         console.error('Error fetching data:', error);
@@ -368,7 +373,7 @@ const Home = ({ onLogout }) => {
     setModulDescription(moduleName);
     setTablename(endpointTable);
     setParameterPeriode(paramPeriode);
-
+    setSearchTermDataperiode('')
   }
 
   const handleConfirmationDeleteData = () => {
@@ -709,6 +714,7 @@ const Home = ({ onLogout }) => {
                             <th>Parameter</th>
                             <th>Description</th>
                             <th>Read</th>
+                            <th>Last Updated</th>
                             <th>Action</th>
                           </tr>
                         </thead>
@@ -728,6 +734,7 @@ const Home = ({ onLogout }) => {
                               <td>
                                 {getFlagStatus(endpoint.__read)}
                               </td>
+                              <td>{moment.utc(endpoint.__updated_date).locale('id').format('DD MMMM YYYY HH:mm')}</td>
                               <td style={{ textAlign: "center" }}>
                                 {endpoint.__read === 1 ? (
                                   <FontAwesomeIcon icon={faHippo} onClick={() => handleFlagChange(endpoint.endpoints_fid, endpoint.__read)} style={{ cursor: "pointer", color: "red", height: "26px" }} data-toggle="tooltip" title="Set Read Statud Not Active" data-placement="top" />
@@ -836,7 +843,7 @@ const Home = ({ onLogout }) => {
               <div className="row mt-4">
                 <div className="col-md-12">
                   {logContent &&
-                    <div className='row' style={{backgroundColor: "#80808017"}}>
+                    <div className='row' style={{ backgroundColor: "#80808017" }}>
                       <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
                         <pre>{logContent}</pre>
                       </div>
