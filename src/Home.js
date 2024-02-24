@@ -37,12 +37,18 @@ const Home = ({ onLogout }) => {
   const totalPagesEndpoint = Math.ceil(endpoints.length / itemPerPageEndpoint);
   const totalPagesDataPeriode = Math.ceil(dataPeriode.length / itemPerPageDataPeriode);
 
+  const token = sessionStorage.getItem('token');
+
   //fetch data endpoint
   const fetchData = useCallback(() => {
     setLoading(true);
     setError('');
 
-    axios.get('http://18.141.101.16:20003/api/endpoints')
+    axios.get('http://localhost:3002/api/endpoints', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
       .then(response => {
         const allEndpoints = response.data;
         const filteredEndpoints = allEndpoints.filter(endpoint => {
@@ -65,14 +71,18 @@ const Home = ({ onLogout }) => {
       .finally(() => {
         setLoading(false);
       });
-  }, [searchTerm]);
+  }, [searchTerm, token]);
 
   //fetch data periode
   const fetchDataPeriode = useCallback(() => {
     setLoadingDataPeriode(true);
     setErrorDataPeriode('');
 
-    axios.get('http://18.141.101.16:20003/api/dataPeriode')
+    axios.get('http://localhost:3002/api/dataPeriode', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
       .then(response => {
         const allEndpoints = response.data;
         const filteredEndpoints = allEndpoints.filter(endpoint => {
@@ -98,39 +108,43 @@ const Home = ({ onLogout }) => {
       .finally(() => {
         setLoadingDataPeriode(false);
       });
-  }, [searchTermDataPeriode]);
+  }, [searchTermDataPeriode, token]);
 
-  //fetch log file list
-  const fetchLogFileList = async () => {
-    try {
-      const response = await axios.get('http://18.141.101.16:20003/api/getLogFileList');
-
-      if (response.data.success) {
-        // Ubah format data file menjadi format yang diterima oleh react-select
-        const files = response.data.files.map(file => ({ label: file, value: file }));
-        setFileOptions(files);
-      } else {
-        Swal.fire({
-          icon: 'error',
-          text: 'Failed to fetch log file list',
-          confirmButtonColor: '#00a65a',
-        });
+  // fetch log file list
+const fetchLogFileList = useCallback(async () => {
+  try {
+    const response = await axios.get('http://localhost:3002/api/getLogFileList', {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    } catch (error) {
-      console.error('Error fetching log file list:', error);
+    });
+
+    if (response.data.success) {
+      // Ubah format data file menjadi format yang diterima oleh react-select
+      const files = response.data.files.map(file => ({ label: file, value: file }));
+      setFileOptions(files);
+    } else {
       Swal.fire({
         icon: 'error',
-        text: 'An error occurred',
+        text: 'Failed to fetch log file list',
         confirmButtonColor: '#00a65a',
       });
     }
-  };
+  } catch (error) {
+    console.error('Error fetching log file list:', error);
+    Swal.fire({
+      icon: 'error',
+      text: 'An error occurred',
+      confirmButtonColor: '#00a65a',
+    });
+  }
+}, [token]);
 
   useEffect(() => {
     fetchData();
     fetchDataPeriode();
     fetchLogFileList();
-  }, [fetchData, fetchDataPeriode])
+  }, [fetchData, fetchDataPeriode, fetchLogFileList])
 
   //flag read data endpoint
   const getFlagStatus = (flag) => {
@@ -150,7 +164,11 @@ const Home = ({ onLogout }) => {
       if (result.isConfirmed) {
         const newFlag = currentFlag === 1 ? 0 : 1;
 
-        axios.patch(`http://18.141.101.16:20003/api/endpoints/${id}`, { __read: newFlag })
+        axios.patch(`http://localhost:3002/api/endpoints/${id}`, { __read: newFlag }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
           .then(response => {
             fetchData();
 
@@ -191,7 +209,11 @@ const Home = ({ onLogout }) => {
       cancelButtonText: 'No',
     }).then((result) => {
       if (result.isConfirmed) {
-        axios.patch('http://18.141.101.16:20003/api/endpoints/updateAllFlag', { __read: newFlag })
+        axios.patch('http://localhost:3002/api/endpoints/updateAllFlag', { __read: newFlag }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
           .then(response => {
             fetchData();
 
@@ -231,7 +253,11 @@ const Home = ({ onLogout }) => {
       if (result.isConfirmed) {
         const newFlag = currentFlag === 1 ? 0 : 1;
 
-        axios.patch(`http://18.141.101.16:20003/api/dataPeriode/${id}`, { __read: newFlag })
+        axios.patch(`http://localhost:3002/api/dataPeriode/${id}`, { __read: newFlag }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
           .then(response => {
             fetchDataPeriode();
 
@@ -272,7 +298,11 @@ const Home = ({ onLogout }) => {
       cancelButtonText: 'No',
     }).then((result) => {
       if (result.isConfirmed) {
-        axios.patch('http://18.141.101.16:20003/api/dataPeriode/updateAllFlag', { __read: newFlag })
+        axios.patch('http://localhost:3002/api/dataPeriode/updateAllFlag', { __read: newFlag }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
           .then(response => {
             fetchDataPeriode();
 
@@ -340,7 +370,11 @@ const Home = ({ onLogout }) => {
     try {
       setModalLoading(true);
 
-      const response = await axios.post(`http://18.141.101.16:20003/api/cekTotalData/${moduleName}`);
+      const response = await axios.post(`http://localhost:3002/api/cekTotalData/${moduleName}`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setTotalDataApi(response.data.totalDataApi)
       setTotalDataDatabase(response.data.totalDataDatabase);
 
@@ -402,9 +436,13 @@ const Home = ({ onLogout }) => {
   //handle delete data
   const handleDeleteData = async () => {
     try {
-      const response = await axios.post('http://18.141.101.16:20003/api/deleteData', {
+      const response = await axios.post('http://localhost:3002/api/deleteData', {
         tableName: tableName,
         periode: kodePeriodeSelected
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.data.success) {
@@ -435,7 +473,11 @@ const Home = ({ onLogout }) => {
   // function execute migration
   const executeMigration = async () => {
     try {
-      const response = await axios.post('http://18.141.101.16:20003/api/runMigration');
+      const response = await axios.post('http://localhost:3002/api/runMigration', {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       console.log(response.data);
 
       if (response.data.success) {
@@ -471,7 +513,11 @@ const Home = ({ onLogout }) => {
     }
 
     try {
-      const response = await axios.get(`http://18.141.101.16:20003/api/getLogFileContent/${selectedFile}`);
+      const response = await axios.get(`http://localhost:3002/api/getLogFileContent/${selectedFile}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
       if (response.data.success) {
         setLogContent(response.data.content);

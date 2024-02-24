@@ -20,7 +20,7 @@ const Login = ({ onLogin }) => {
         return;
       }
 
-      const response = await axios.post('http://18.141.101.16:20003/api/login', { username, password });
+      const response = await axios.post('http://localhost:3002/api/login', { username, password });
 
       if (response.status === 200 && response.data.success) {
         Swal.fire({
